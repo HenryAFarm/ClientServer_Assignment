@@ -98,26 +98,18 @@ public class MainController implements Initializable {
 
     @FXML
     void startServer(ActionEvent event) {
-        Stage stage = new Stage();
-        Group root = new Group();
-        Label lb11 = new Label("Server");
-        lb11.setLayoutX(100);
-        lb11.setLayoutY(100);
-
-        lb12 = new Label("info");
-        lb12.setLayoutX(100);
-        lb12.setLayoutY(200);
-        root.getChildren().addAll(lb11, lb12);
-        Scene scene = new Scene(root, 600, 350);
-        stage.setScene(scene);
-        lb12.setText("Server is running and waiting for a client...");
-
-        stage.setTitle("Server");
-        stage.show();
-
-
-        new Thread(this::runServer).start();
-
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("server-view.fxml")
+            );
+            Parent root = loader.load();
+            Stage stage = new Stage();
+            stage.setTitle("Server");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            resultArea.setText("Error opening server view: " + e.getMessage() + "\n");
+        }
     }
 
     String message;
