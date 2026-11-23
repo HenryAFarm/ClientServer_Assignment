@@ -19,6 +19,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -41,6 +43,7 @@ public class ServerView implements Initializable {
     private VBox vbox_messages;
 
     private final ConcurrentHashMap<Integer, DataOutputStream> clients = new ConcurrentHashMap<>();
+    private final List<String> chatHistory = new CopyOnWriteArrayList<>();
     private final AtomicInteger clientIds = new AtomicInteger();
     private volatile ServerSocket serverSocket;
     private volatile boolean running;
@@ -77,7 +80,7 @@ public class ServerView implements Initializable {
 
         running = true;
         Thread serverThread = new Thread(() -> {
-            try (ServerSocket listener = new ServerSocket(PORT)) {
+            try (            ServerSocket listener = new ServerSocket(PORT, 50, java.net.InetAddress.getLoopbackAddress())) {
                 serverSocket = listener;
                 addMessage("Server: listening on localhost:" + PORT);
 
@@ -114,6 +117,13 @@ public class ServerView implements Initializable {
 
             clients.put(clientId, output);
 
+            for (String previousMessage : chatHistory) {
+                synchronized (output) {
+                    output.writeUTF(previousMessage);
+                    output.flush();
+                }
+            }
+
             while (running) {
                 String message = input.readUTF();
                 if ("exit".equalsIgnoreCase(message.trim())) {
@@ -132,6 +142,7 @@ public class ServerView implements Initializable {
     }
 
     private void broadcast(String message) {
+        chatHistory.add(message);
         addMessage(message);
 
         for (DataOutputStream output : clients.values()) {

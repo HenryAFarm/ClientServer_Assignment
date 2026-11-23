@@ -66,29 +66,43 @@ public class ClientView implements Initializable {
         }
 
         Thread connectionThread = new Thread(() -> {
-            try {
-                socket = new Socket(HOST, PORT);
-                output = new DataOutputStream(socket.getOutputStream());
-                DataInputStream input = new DataInputStream(socket.getInputStream());
-                connected = true;
-                running = true;
+            for (int attempt = 1; attempt <= 20 && !connected; attempt++) {
+                try {
+                    socket = new Socket(HOST, PORT);
+                    output = new DataOutputStream(socket.getOutputStream());
+                    DataInputStream input = new DataInputStream(socket.getInputStream());
+                    connected = true;
+                    running = true;
 
-                addMessage(userName + ": connected to " + HOST + ":" + PORT);
+                    addMessage(userName + " connected");
 
-                while (running) {
-                    String message = input.readUTF();
-                    addMessage(message);
+                    while (running) {
+                        String message = input.readUTF();
+                        addMessage(message);
+                    }
+                    return;
+                } catch (EOFException | SocketException exception) {
+                    if (running) {
+                        addMessage("Connection closed");
+                    }
+                    return;
+                } catch (IOException exception) {
+                    if (attempt == 1) {
+                        addMessage("Waiting for the server...");
+                    }
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException interruptedException) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
                 }
-            } catch (EOFException | SocketException exception) {
-                if (running) {
-                    addMessage("Connection closed");
-                }
-            } catch (IOException exception) {
-                addMessage("Unable to connect: " + exception.getMessage());
-            } finally {
-                connected = false;
-                running = false;
             }
+
+            if (!connected) {
+                addMessage("Unable to connect: server is not available");
+            }
+            running = false;
         }, userName + "-connection");
         connectionThread.setDaemon(true);
         connectionThread.start();
