@@ -119,7 +119,7 @@ public class ServerView implements Initializable {
                 if ("exit".equalsIgnoreCase(message.trim())) {
                     break;
                 }
-                broadcast("Client " + clientId + ": " + message);
+                broadcast(message);
             }
         } catch (EOFException | SocketException exception) {
             addMessage("Server: client " + clientId + " disconnected");

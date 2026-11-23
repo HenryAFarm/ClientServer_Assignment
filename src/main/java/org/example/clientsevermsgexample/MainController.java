@@ -193,6 +193,35 @@ public class MainController implements Initializable {
 
     }
 
+    @FXML
+    void startUser1(ActionEvent event) {
+        openChatClient("User 1");
+    }
+
+    @FXML
+    void startUser2(ActionEvent event) {
+        openChatClient("User 2");
+    }
+
+    private void openChatClient(String userName) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("client-view.fxml")
+            );
+            Parent root = loader.load();
+            ClientView controller = loader.getController();
+            controller.setUserName(userName);
+            controller.connect();
+
+            Stage stage = new Stage();
+            stage.setTitle(userName);
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            resultArea.setText("Error opening " + userName + ": " + e.getMessage() + "\n");
+        }
+    }
+
 
     private void connectToServer(ActionEvent event) {
 
